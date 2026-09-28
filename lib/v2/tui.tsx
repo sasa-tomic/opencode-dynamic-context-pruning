@@ -22,6 +22,36 @@ export async function setup(ctx: Plugin.Context) {
     const client = ctx.client.rpc(rpc)
     const options = () => ({ location: ctx.location ?? ctx.data.location.default() })
     if (!(await client.status({}, options())).enabled) return
+
+    // Render server-side DCP reports as transient toasts. Events are
+    // ephemeral: nothing stored, nothing in model context.
+    if (typeof ctx.data?.on === "function" && typeof ctx.ui?.toast?.show === "function") {
+        const TOAST_MAX_LINES = 12
+        const truncateToast = (message: string): string => {
+            const lines = message.split("\n")
+            if (lines.length <= TOAST_MAX_LINES) return message
+            const remaining = lines.length - TOAST_MAX_LINES + 1
+            return (
+                lines.slice(0, TOAST_MAX_LINES - 1).join("\n") + `\n... and ${remaining} more`
+            )
+        }
+        ctx.data.on("rpc.dcp.notify", (event) => {
+            const data = (event?.data ?? {}) as {
+                title?: string
+                message?: string
+                variant?: "info" | "success" | "warning" | "error"
+                duration?: number
+            }
+            if (!data.message) return
+            ctx.ui.toast.show({
+                title: data.title ?? "DCP",
+                message: truncateToast(data.message),
+                variant: data.variant ?? "info",
+                duration: data.duration ?? 5000,
+            })
+        })
+    }
+
     const api: ViewApi = {
         renderer: ctx.renderer,
         theme: resolveViewTheme(() => ctx.theme),

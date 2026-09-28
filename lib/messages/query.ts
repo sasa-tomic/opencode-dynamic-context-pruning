@@ -1,6 +1,7 @@
 import type { PluginConfig } from "../config"
 import type { WithParts } from "../state"
 import { isMessageWithInfo } from "./shape"
+import { isDcpChatText } from "../ui/utils"
 
 export const getLastUserMessage = (
     messages: WithParts[],
@@ -67,9 +68,16 @@ export const isIgnoredUserMessage = (message: WithParts): boolean => {
     }
 
     for (const part of parts) {
-        if (!(part as any).ignored) {
-            return false
+        if ((part as any).ignored) {
+            continue
         }
+        // V2 hosts never strip `ignored` parts and the flag does not always
+        // survive into the request view, so DCP chat notifications are also
+        // recognized by their branded marker text.
+        if (part.type === "text" && isDcpChatText(part.text)) {
+            continue
+        }
+        return false
     }
 
     return true

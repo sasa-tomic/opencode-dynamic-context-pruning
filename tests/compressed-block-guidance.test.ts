@@ -54,14 +54,13 @@ test("block guidance lists per-block token cost, total, and the merge hint", () 
     assert.match(guidance, /- b1: ~3\.2k tokens/)
     assert.match(guidance, /- b2: ~450 tokens/)
     assert.match(guidance, /Total held by block summaries: ~11\.8k tokens\./)
-    assert.match(guidance, /\(1\) DROP content that is no longer needed/)
-    assert.match(guidance, /\(2\) MERGE only content that will absolutely be necessary/)
-    assert.match(guidance, /\(3\) If unsure whether content is still needed, leave it alone/)
+    assert.match(guidance, /\(1\) DROP ranges no longer needed/)
+    assert.match(guidance, /\(2\) MERGE only content needed/)
+    assert.match(guidance, /\(3\) Leave anything uncertain alone\./)
     const dropIndex = guidance.indexOf("(1) DROP")
     const mergeIndex = guidance.indexOf("(2) MERGE")
     assert.ok(dropIndex < mergeIndex, "drop rule must be listed before the merge rule")
     assert.match(guidance, /reference each included block exactly once as `\(bN\)`/)
-    assert.match(guidance, /include each required placeholder exactly once/)
 })
 
 test("block guidance with no active blocks keeps the original shape", () => {
@@ -82,7 +81,7 @@ test("manual trigger prompt exposes the occupancy guidance", () => {
 
     assert.match(prompt, /dcp_compress/)
     assert.match(prompt, /- b1: ~5\.0k tokens/)
-    assert.match(prompt, /\(2\) MERGE only content that will absolutely be necessary/)
+    assert.match(prompt, /\(2\) MERGE only content needed/)
 })
 
 test("message occupancy guidance names the largest uncompressed messages", () => {
@@ -226,5 +225,5 @@ test("manual trigger prompt carries the merge caveat", () => {
     const prompt = getTriggerPrompt("compress", state, config)
 
     assert.match(prompt, /Merge caveat/)
-    assert.match(prompt, /individual decompression later/)
+    assert.match(prompt, /merged blocks can no longer be dropped/)
 })

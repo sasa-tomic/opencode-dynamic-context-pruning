@@ -81,8 +81,8 @@ Each level overrides the previous, so project settings take priority over global
     "debug": false,
     // Notification display: "off", "minimal", or "detailed"
     "pruneNotification": "detailed",
-    // Notification type: "chat" (in-conversation) or "toast" (system toast)
-    "pruneNotificationType": "chat",
+    // Notification type: "toast" (transient, not stored; default) or "chat" (in-conversation message)
+    "pruneNotificationType": "toast",
     // Slash commands configuration
     "commands": {
         "enabled": true,

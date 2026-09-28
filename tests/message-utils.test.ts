@@ -41,3 +41,25 @@ test("isIgnoredUserMessage only ignores user messages", () => {
     assert.equal(isIgnoredUserMessage(ignoredUserMessage), true)
     assert.equal(isIgnoredUserMessage(assistantMessage), false)
 })
+
+test("isIgnoredUserMessage recognizes DCP chat notifications by marker", () => {
+    const markerMessage = buildMessage("user", [
+        { id: "p1", sessionID: "s", messageID: "msg-user", type: "text", text: "▣ DCP\nreport" },
+    ] as WithParts["parts"])
+    const legacyMessage = buildMessage("user", [
+        {
+            id: "p1",
+            sessionID: "s",
+            messageID: "msg-user",
+            type: "text",
+            text: "<compress triggered manually>\n\nold prompt",
+        },
+    ] as WithParts["parts"])
+    const realMessage = buildMessage("user", [
+        { id: "p1", sessionID: "s", messageID: "msg-user", type: "text", text: "hello" },
+    ] as WithParts["parts"])
+
+    assert.equal(isIgnoredUserMessage(markerMessage), true)
+    assert.equal(isIgnoredUserMessage(legacyMessage), true)
+    assert.equal(isIgnoredUserMessage(realMessage), false)
+})

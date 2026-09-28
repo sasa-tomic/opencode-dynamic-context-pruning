@@ -100,6 +100,59 @@ test("V2 projection preserves all native content without edits", () => {
     assert.deepEqual(project(messages, entries(messages), session).restore(), messages)
 })
 
+test("V2 request view drops DCP chat notifications but keeps look-alike assistant text", () => {
+    const native: Message[] = [
+        {
+            id: "msg_user",
+            role: "user",
+            content: [{ type: "text", text: "Real user prompt" }],
+        },
+        {
+            id: "msg_dcp_note",
+            role: "user",
+            content: [{ type: "text", text: "▣ DCP | ~1.2K saved total" }],
+        },
+        {
+            id: "msg_legacy_note",
+            role: "user",
+            content: [
+                { type: "text", text: "<compress triggered manually>\n\nold trigger prompt" },
+            ],
+        },
+        {
+            id: "msg_assistant",
+            role: "assistant",
+            content: [{ type: "text", text: "The report starts with ▣ DCP | in the log" }],
+        },
+    ]
+    const restored = project(native, entries(native), session).restore()
+    assert.deepEqual(
+        restored.map((message) => message.id),
+        ["msg_user", "msg_assistant"],
+    )
+})
+
+test("V2 history view skips DCP chat notifications entirely", async () => {
+    const { history } = await import("../lib/v2/messages")
+    const entries = [
+        {
+            id: "msg_user",
+            type: "user",
+            time: { created: 1 },
+            text: "Real user prompt",
+        },
+        {
+            id: "msg_note",
+            type: "user",
+            time: { created: 2 },
+            text: "▣ DCP\nSweep report body",
+        },
+    ] as unknown as Parameters<typeof history>[0]
+    const views = history(entries, session as Parameters<typeof history>[1])
+    assert.equal(views.length, 1)
+    assert.equal(views[0]!.info.id, "msg_user")
+})
+
 test("V2 ID injection preserves signatures, media and tool pairing", () => {
     const native = transcript()
     const view = project(native, entries(native), session)
