@@ -113,10 +113,10 @@ test("V2 request view drops DCP chat notifications but keeps look-alike assistan
             content: [{ type: "text", text: "▣ DCP | ~1.2K saved total" }],
         },
         {
-            id: "msg_legacy_note",
+            id: "msg_trigger",
             role: "user",
             content: [
-                { type: "text", text: "<compress triggered manually>\n\nold trigger prompt" },
+                { type: "text", text: "<compress triggered manually>\n\nManual trigger prompt" },
             ],
         },
         {
@@ -126,10 +126,12 @@ test("V2 request view drops DCP chat notifications but keeps look-alike assistan
         },
     ]
     const restored = project(native, entries(native), session).restore()
-    assert.deepEqual(
-        restored.map((message) => message.id),
-        ["msg_user", "msg_assistant"],
-    )
+    // Manual-trigger prompts reach the model; only stamped DCP notes are dropped.
+    assert.deepEqual(restored.map((message) => message.id), [
+        "msg_user",
+        "msg_trigger",
+        "msg_assistant",
+    ])
 })
 
 test("V2 history view skips DCP chat notifications entirely", async () => {
@@ -147,10 +149,18 @@ test("V2 history view skips DCP chat notifications entirely", async () => {
             time: { created: 2 },
             text: "▣ DCP\nSweep report body",
         },
+        {
+            id: "msg_trigger",
+            type: "user",
+            time: { created: 3 },
+            text: "<compress triggered manually>\n\nManual trigger prompt",
+        },
     ] as unknown as Parameters<typeof history>[0]
     const views = history(entries, session as Parameters<typeof history>[1])
-    assert.equal(views.length, 1)
-    assert.equal(views[0]!.info.id, "msg_user")
+    assert.deepEqual(
+        views.map((view) => view.info.id),
+        ["msg_user", "msg_trigger"],
+    )
 })
 
 test("V2 ID injection preserves signatures, media and tool pairing", () => {

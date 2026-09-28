@@ -46,13 +46,13 @@ test("isIgnoredUserMessage recognizes DCP chat notifications by marker", () => {
     const markerMessage = buildMessage("user", [
         { id: "p1", sessionID: "s", messageID: "msg-user", type: "text", text: "▣ DCP\nreport" },
     ] as WithParts["parts"])
-    const legacyMessage = buildMessage("user", [
+    const triggerPrompt = buildMessage("user", [
         {
             id: "p1",
             sessionID: "s",
             messageID: "msg-user",
             type: "text",
-            text: "<compress triggered manually>\n\nold prompt",
+            text: "<compress triggered manually>\n\nManual mode trigger received.",
         },
     ] as WithParts["parts"])
     const realMessage = buildMessage("user", [
@@ -60,6 +60,7 @@ test("isIgnoredUserMessage recognizes DCP chat notifications by marker", () => {
     ] as WithParts["parts"])
 
     assert.equal(isIgnoredUserMessage(markerMessage), true)
-    assert.equal(isIgnoredUserMessage(legacyMessage), true)
+    // Manual-trigger prompts must stay visible to the model.
+    assert.equal(isIgnoredUserMessage(triggerPrompt), false)
     assert.equal(isIgnoredUserMessage(realMessage), false)
 })
