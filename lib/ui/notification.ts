@@ -341,6 +341,9 @@ export async function sendIgnoredMessage(
                         type: "text",
                         text: stamped,
                         ignored: true,
+                        // Host TUIs hide synthetic text parts; `ignored` alone
+                        // still renders them as visible user bubbles.
+                        synthetic: true,
                     },
                 ],
             },
